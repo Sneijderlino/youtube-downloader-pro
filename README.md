@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="/img/banner.jpg" alt="YouTube Downloader Pro Banner" width="900"/>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Tool-YouTube%20Downloader-brightgreen?style=for-the-badge&logo=python"/>
   <img src="https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge"/>
   <img src="https://img.shields.io/github/license/Sneijderlino/youtube-downloader-pro?style=for-the-badge"/>
@@ -7,9 +11,7 @@
 
 ---
 
-<p align="center">
-  <img src="/img/banner.jpg" alt="YouTube Downloader Pro Banner" width="900"/>
-</p>
+
 
 # 🎬 YouTube Downloader Pro Ultimate Edition
 
