@@ -1,183 +1,394 @@
 import os
 import re
+import threading
+import time
+import queue
+from datetime import datetime
+from io import BytesIO
+
 import yt_dlp
-from colorama import Fore, Style, init
-from tqdm import tqdm
+import customtkinter as ctk
+from tkinter import filedialog, messagebox, Text, DISABLED, NORMAL, END, NW
+from PIL import Image, ImageTk
+import requests
+import random
 
-
-init(autoreset=True)
 
 def sanitize_filename(title):
-
     return re.sub(r'[\\/*?:"<>|]', "", title).strip()
 
-def pilih_jenis():
-    while True:
-        print(Fore.MAGENTA + "\nPilih jenis download:")
-        print("1. Audio saja 🎵")
-        print("2. Video lengkap 🎬")
-        print("0. Kembali / Batal ❌")
-        pilihan = input(Fore.YELLOW + "Masukkan pilihan (0/1/2): ").strip()
-        if pilihan in ['1', '2']:
-            return pilihan
-        elif pilihan == '0':
-            return None
-        else:
-            print(Fore.RED + "❌ Pilihan tidak valid, coba lagi.")
+def log_download(title, path):
+    with open("riwayat_download.txt", "a", encoding="utf-8") as f:
+        f.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {title} -> {path}\n")
 
-def pilih_format_audio():
 
-    while True:
-        print(Fore.MAGENTA + "\nPilih format audio:")
-        print("1. MP3")
-        print("2. WAV")
-        print("3. M4A")
-        print("0. Kembali 🔙")
-        f_choice = input(Fore.YELLOW + "Masukkan pilihan (0/1/2/3): ").strip()
-        if f_choice == '0':
-            return None
-        if f_choice in ['1', '2', '3']:
-            return {'1': 'mp3', '2': 'wav', '3': 'm4a'}[f_choice]
-        print(Fore.RED + "❌ Pilihan tidak valid, coba lagi.")
+BG_MAIN = "#061018"
+PANEL = "#0b1820"
+ACCENT = "#fdfdfd"
+ACCENT2 = "#000000"
+TEXT_SOFT = "#c9f0ef"
+MUTED = "#97b3b7"
 
-def pilih_format_video():
 
-    while True:
-        print(Fore.MAGENTA + "\nPilih format video:")
-        print("1. MP4")
-        print("2. MKV")
-        print("3. WebM")
-        print("0. Kembali 🔙")
-        f_choice = input(Fore.YELLOW + "Masukkan pilihan (0/1/2/3): ").strip()
-        if f_choice == '0':
-            return None
-        if f_choice in ['1', '2', '3']:
-            return {'1': 'mp4', '2': 'mkv', '3': 'webm'}[f_choice]
-        print(Fore.RED + "❌ Pilihan tidak valid, coba lagi.")
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("dark-blue")
 
-def pilih_resolusi(info):
+APP_W = 980
+APP_H = 640
 
-    print(Fore.MAGENTA + "\n📺 Daftar resolusi yang tersedia:")
-    formats = [
-        f for f in info['formats']
-        if f.get('vcodec') != 'none' and f.get('acodec') != 'none'
-    ]
-    available_res = []
-    for f in formats:
-        res = f.get('format_note') or f.get('height')
-        if res and str(res) not in available_res:
-            available_res.append(str(res))
 
-    for i, r in enumerate(available_res, 1):
-        print(f"{i}. {r}")
-    print("0. Kembali 🔙")
+progress_queue = queue.Queue()
 
-    while True:
-        choice = input(Fore.YELLOW + "Pilih resolusi (nomor): ").strip()
-        if choice == '0':
-            return None
-        if choice.isdigit() and 1 <= int(choice) <= len(available_res):
-            return available_res[int(choice)-1]
-        print(Fore.RED + "❌ Pilihan tidak valid, coba lagi.")
+
+app = ctk.CTk()
+app.title("┌─[ S N E I J D E R • SOFT-HACK ]─┐")
+app.geometry(f"{APP_W}x{APP_H}")
+app.resizable(False, False)
+
+
+bg_canvas = ctk.CTkCanvas(app, width=APP_W, height=APP_H, highlightthickness=0, bg=BG_MAIN)
+bg_canvas.place(x=0, y=0)
+
+
+main_frame = ctk.CTkFrame(app, corner_radius=12, fg_color=PANEL)
+main_frame.place(relx=0.02, rely=0.03, relwidth=0.96, relheight=0.94)
+
+
+left_frame = ctk.CTkFrame(main_frame, corner_radius=10, fg_color="#07121a")
+left_frame.place(relx=0.02, rely=0.02, relwidth=0.56, relheight=0.96)
+
+
+title_label = ctk.CTkLabel(left_frame, text="SNEIJDERLINO • YOU TUBE DOWNLOADER", 
+                          font=("Consolas", 20, "bold"), text_color=ACCENT)
+title_label.pack(pady=(12,4))
+
+subtitle = ctk.CTkLabel(left_frame, text="Sneijderlino Ghost • GUI terminal", 
+                        font=("Consolas", 10), text_color=MUTED)
+subtitle.pack(pady=(0,12))
+
+
+ctk.CTkLabel(left_frame, text="▶ URL YouTube:", anchor="w", font=("Consolas", 11), text_color=TEXT_SOFT).pack(padx=16, pady=(6,2), fill="x")
+url_var = ctk.StringVar()
+url_entry = ctk.CTkEntry(left_frame, textvariable=url_var, width=480, placeholder_text="https://youtube.com/...", 
+                         fg_color="#061821", text_color=TEXT_SOFT, corner_radius=6)
+url_entry.pack(padx=16, pady=(0,10), fill="x")
+
+
+playlist_var = ctk.BooleanVar(value=False)
+playlist_chk = ctk.CTkCheckBox(left_frame, text="Playlist (multi)", variable=playlist_var, 
+                               fg_color="#103235", text_color=MUTED)
+playlist_chk.pack(padx=16, pady=(0,8), anchor="w")
+
+
+ctk.CTkLabel(left_frame, text="▶ Mode:", anchor="w", font=("Consolas", 11), text_color=TEXT_SOFT).pack(padx=16, pady=(6,2), fill="x")
+jenis_var = ctk.StringVar(value="audio")
+frame_radio = ctk.CTkFrame(left_frame, fg_color="#07121a", corner_radius=6)
+frame_radio.pack(padx=16, pady=(0,8), fill="x")
+ctk.CTkRadioButton(frame_radio, text="Audio", variable=jenis_var, value="audio", 
+                   text_color=TEXT_SOFT, fg_color="#103235", height=24).pack(side="left", padx=12, pady=8)
+ctk.CTkRadioButton(frame_radio, text="Video", variable=jenis_var, value="video", 
+                   text_color=TEXT_SOFT, fg_color="#103235", height=24).pack(side="left", padx=12, pady=8)
+
+
+ctk.CTkLabel(left_frame, text="▶ Format:", anchor="w", font=("Consolas", 11), text_color=TEXT_SOFT).pack(padx=16, pady=(6,2), fill="x")
+format_var = ctk.StringVar(value="mp3")
+format_menu = ctk.CTkOptionMenu(left_frame, values=["mp3","wav","m4a","mp4","mkv","webm"], variable=format_var,
+                                fg_color="#061821", button_color="#11363a", text_color=TEXT_SOFT)
+format_menu.pack(padx=16, pady=(0,8), fill="x")
+
+
+ctk.CTkLabel(left_frame, text="▶ Resolusi (Video):", anchor="w", font=("Consolas", 11), text_color=TEXT_SOFT).pack(padx=16, pady=(6,2), fill="x")
+res_var = ctk.StringVar(value="best")
+res_menu = ctk.CTkOptionMenu(left_frame, values=["best"], variable=res_var,
+                             fg_color="#061821", button_color="#11363a", text_color=TEXT_SOFT)
+res_menu.pack(padx=16, pady=(0,8), fill="x")
+
+
+output_folder_var = ctk.StringVar(value=os.getcwd())
+def pilih_folder():
+    f = filedialog.askdirectory()
+    if f:
+        output_folder_var.set(f)
+        folder_label.configure(text=f"📁 {f}", text_color=MUTED)
+
+ctk.CTkButton(left_frame, text="Pick Save Folder", command=pilih_folder, 
+              fg_color=ACCENT2, hover_color="#e8c79f").pack(padx=16, pady=(6,6), anchor="w")
+folder_label = ctk.CTkLabel(left_frame, text=f"📁 {output_folder_var.get()}", anchor="w", font=("Consolas",9), text_color=MUTED)
+folder_label.pack(padx=16, pady=(0,12), fill="x")
+
+# Buttons row
+btn_frame = ctk.CTkFrame(left_frame, fg_color="#07121a")
+btn_frame.pack(padx=16, pady=(6,12), fill="x")
+def on_ambil():
+    threading.Thread(target=ambil_resolusi_preview, daemon=True).start()
+ctk.CTkButton(btn_frame, text="● FETCH INFO", command=on_ambil, fg_color=ACCENT, hover_color="#5bd0d6").pack(side="left", padx=8, pady=8, ipadx=6)
+def on_start():
+    threading.Thread(target=mulai_download_thread, daemon=True).start()
+ctk.CTkButton(btn_frame, text="▶ START", command=on_start, fg_color=ACCENT2, hover_color="#e8c79f").pack(side="left", padx=8, pady=8, ipadx=12)
+
+
+right_frame = ctk.CTkFrame(main_frame, corner_radius=10, fg_color="#041216")
+right_frame.place(relx=0.60, rely=0.02, relwidth=0.38, relheight=0.96)
+
+preview_card = ctk.CTkFrame(right_frame, corner_radius=8, fg_color="#071a1c")
+preview_card.pack(padx=12, pady=12, fill="x")
+
+thumbnail_placeholder = ctk.CTkLabel(preview_card, text="No Preview", width=360, height=180, 
+                                     fg_color="#031314", text_color=MUTED, corner_radius=6)
+thumbnail_placeholder.pack(padx=12, pady=10)
+
+title_var = ctk.StringVar(value="—")
+title_preview = ctk.CTkLabel(preview_card, textvariable=title_var, text_color=TEXT_SOFT, 
+                             font=("Consolas", 12, "bold"), wraplength=260, anchor=NW)
+title_preview.pack(padx=12, pady=(0,12), fill="x")
+
+# Progress visible numeric + bar (soft accents)
+progress_frame = ctk.CTkFrame(right_frame, fg_color="#041216")
+progress_frame.pack(padx=12, pady=(0,8), fill="x")
+
+progress_label_var = ctk.StringVar(value="Progress: 0.0%")
+progress_label = ctk.CTkLabel(progress_frame, textvariable=progress_label_var, text_color=TEXT_SOFT, font=("Consolas",10))
+progress_label.pack(padx=10, pady=(8,6), anchor="w")
+
+progress_bar = ctk.CTkProgressBar(progress_frame, width=300, height=18, mode="determinate")
+progress_bar.set(0)
+progress_bar.pack(padx=10, pady=(0,12))
+
+# Speed & ETA
+speed_var = ctk.StringVar(value="Speed: 0 KB/s")
+eta_var = ctk.StringVar(value="ETA: --:--")
+ctk.CTkLabel(progress_frame, textvariable=speed_var, text_color=MUTED, font=("Consolas",9)).pack(padx=10, anchor="w")
+ctk.CTkLabel(progress_frame, textvariable=eta_var, text_color=MUTED, font=("Consolas",9)).pack(padx=10, pady=(0,8), anchor="w")
+
+# Terminal log (softer green text)
+log_frame = ctk.CTkFrame(right_frame, fg_color="#021216")
+log_frame.pack(padx=12, pady=6, fill="both", expand=True)
+terminal = Text(log_frame, bg="#021216", fg="#A7FFE6", insertbackground="#A7FFE6", 
+                font=("Consolas", 10), wrap="word", bd=0, highlightthickness=0)
+terminal.pack(fill="both", expand=True, padx=6, pady=6)
+terminal.insert(END, ">> Ready. Paste URL then [● FETCH INFO] → [▶ START]\n")
+terminal.configure(state=DISABLED)
+
+
+class GentleMatrix:
+    def __init__(self, canvas, width, height, cols=80):
+        self.canvas = canvas
+        self.width = width
+        self.height = height
+        self.cols = cols
+        self.font_size = max(9, int(width/cols))
+        self.drops = [random.randint(-300, 0) for _ in range(cols)]
+        self.chars = "01░▒▗▖▝▘"
+        self.running = True
+        self._tick()
+
+    def _tick(self):
+        if not self.running:
+            return
+        self.canvas.delete("matrix")
+        for i in range(self.cols):
+            x = i * (self.font_size + 2)
+            y = self.drops[i] * (self.font_size + 1)
+            ch = random.choice(self.chars)
+            
+            self.canvas.create_text(x, y, text=ch, anchor="nw", font=("Consolas", self.font_size),
+                                    fill="#2a1b12", tag="matrix")
+        
+            self.canvas.create_text(x, y, text=ch, anchor="nw", font=("Consolas", self.font_size),
+                                    fill=ACCENT, tag="matrix")
+            if y > self.height and random.random() > 0.986:
+                self.drops[i] = random.randint(-12, 0)
+            self.drops[i] += 1
+        self.canvas.after(90, self._tick)
+
+matrix = GentleMatrix(bg_canvas, APP_W, APP_H, cols=80)
+
+
+def log(msg, newline=True):
+    ts = datetime.now().strftime("%H:%M:%S")
+    text = f"[{ts}] {msg}"
+    def _append():
+        terminal.configure(state=NORMAL)
+        terminal.insert(END, text + ("\n" if newline else ""))
+        terminal.see(END)
+        terminal.configure(state=DISABLED)
+    app.after(0, _append)
 
 def progress_hook(d):
-
-    global progress_bar
-    if d['status'] == 'downloading':
-        if progress_bar is None:
-            total = d.get('total_bytes') or d.get('total_bytes_estimate', 0)
-            progress_bar = tqdm(total=total, unit='B', unit_scale=True, desc="📥 Mengunduh")
-        progress_bar.update(d.get('downloaded_bytes', 0) - progress_bar.n)
-    elif d['status'] == 'finished':
-        if progress_bar:
-            progress_bar.close()
-            print(Fore.GREEN + "✅ Unduhan selesai, memproses file...")
+    progress_queue.put(d)
 
 
-print(Fore.CYAN + "🚀 YouTube Downloader Sneijderlino")
-print(Fore.CYAN + "===================================================")
+last_download_n = 0
+last_time = None
+def process_progress_queue():
+    global last_download_n, last_time
+    try:
+        while True:
+            d = progress_queue.get_nowait()
+            status = d.get("status", "")
+            if status == "downloading":
+                total = d.get("total_bytes") or d.get("total_bytes_estimate") or 0
+                downloaded = d.get("downloaded_bytes") or 0
+                now = time.time()
+                if last_time is None:
+                    last_time = now
+                    last_download_n = downloaded
+                    speed = 0.0
+                else:
+                    dt = now - last_time if (now - last_time) > 0 else 1
+                    speed = (downloaded - last_download_n) / dt
+                    last_time = now
+                    last_download_n = downloaded
+                percent = (downloaded / total) if total else 0
+                progress_bar.set(percent)
+                progress_label_var.set(f"Progress: {percent*100:.2f}%")
+                speed_kb = speed / 1024.0
+                speed_var.set(f"Speed: {speed_kb:.1f} KB/s")
+                eta = "--:--"
+                if speed > 50 and total and downloaded < total:
+                    secs = (total - downloaded) / speed
+                    eta = time.strftime("%H:%M:%S", time.gmtime(secs))
+                eta_var.set(f"ETA: {eta}")
+                if int(percent*100) % 5 == 0:
+                    log(f"downloading... {percent*100:.2f}%")
+            elif status == "finished":
+                progress_bar.set(1.0)
+                progress_label_var.set("Progress: 100.00%")
+                speed_var.set("Speed: 0 KB/s")
+                eta_var.set("ETA: 00:00:00")
+                log("Download finished, processing file...")
+                app.after(0, lambda: messagebox.showinfo("Selesai", "Download complete"))
+            elif status == "error":
+                log("ERROR: " + str(d.get("error", "unknown")))
+            else:
+                log(f"status: {status}")
+    except queue.Empty:
+        pass
+    app.after(250, process_progress_queue)
 
-url = input(Fore.YELLOW + "Masukkan link YouTube: ").strip()
-if not url:
-    print(Fore.RED + "❌ URL tidak boleh kosong.")
-    exit()
-
-
-while True:
-    jenis = pilih_jenis()
-    if jenis is None:
-        print(Fore.RED + "❌ Proses dibatalkan oleh pengguna.")
-        exit()
-
-    if jenis == '1':  
-        fmt = pilih_format_audio()
-        if fmt is None:
-            continue
-        download_type = 'audio'
-    else:  # Video
-        fmt = pilih_format_video()
-        if fmt is None:
-            continue
-        download_type = 'video'
-    break
-
-
-output_folder = input(Fore.YELLOW + "\nMasukkan folder tujuan (kosongkan untuk folder ini): ").strip()
-if not output_folder:
-    output_folder = os.getcwd()
-else:
-    os.makedirs(output_folder, exist_ok=True)
-
-
-info_opts = {'quiet': True}
-with yt_dlp.YoutubeDL(info_opts) as ydl:
-    info = ydl.extract_info(url, download=False)
-
-judul = sanitize_filename(info.get('title', 'video'))
-print(Fore.CYAN + f"\n🎧 Judul: {judul}")
-
-
-if download_type == 'video':
-    resolution = pilih_resolusi(info)
-    if resolution is None:
-        print(Fore.RED + "🔙 Kembali ke menu utama.")
-        exit()
-else:
-    resolution = None
-
-
-progress_bar = None
+app.after(250, process_progress_queue)
 
 
-if download_type == 'audio':
-    ydl_opts = {
-        'format': 'bestaudio/best',
-        'outtmpl': os.path.join(output_folder, f"{judul}.%(ext)s"),
+def ambil_resolusi_preview_sync(url):
+    info_opts = {'quiet': True}
+    with yt_dlp.YoutubeDL(info_opts) as ydl:
+        info = ydl.extract_info(url, download=False)
+    return info
+
+def ambil_resolusi_preview():
+    url = url_var.get().strip()
+    if not url:
+        messagebox.showwarning("No URL", "Masukkan URL dulu.")
+        return
+    try:
+        log("Fetching video info...")
+        info = ambil_resolusi_preview_sync(url)
+        formats = [f for f in info.get('formats', []) if f.get('vcodec') != 'none' and f.get('acodec') != 'none']
+        available_res = []
+        for f in formats:
+            res = f.get('format_note') or f.get('height')
+            if res and str(res) not in available_res:
+                available_res.append(str(res))
+        if "best" not in available_res:
+            available_res.append("best")
+        def set_res():
+            res_menu.configure(values=available_res)
+            res_var.set("best")
+        app.after(0, set_res)
+        title = info.get("title", "Unknown")
+        app.after(0, lambda: title_var.set(title))
+        thumb = info.get("thumbnail")
+        if thumb:
+            try:
+                r = requests.get(thumb, timeout=10)
+                img = Image.open(BytesIO(r.content)).convert("RGBA")
+                img.thumbnail((360, 200))
+                tkimg = ImageTk.PhotoImage(img)
+                def set_thumb():
+                    thumbnail_placeholder.configure(image=tkimg, text="")
+                    thumbnail_placeholder.image = tkimg
+                app.after(0, set_thumb)
+            except Exception as e:
+                log(f"Failed to fetch thumbnail: {e}")
+        log(f"Fetched info: {title}")
+    except Exception as e:
+        log(f"Failed to fetch info: {e}")
+        messagebox.showerror("Fetch failed", f"Gagal ambil info: {e}")
+
+
+def build_ydl_opts(jenis, fmt, output_folder, playlist_mode, resolution):
+    opts = {
+        'outtmpl': os.path.join(output_folder, '%(title)s.%(ext)s'),
         'progress_hooks': [progress_hook],
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': fmt,
-            'preferredquality': '192',
-        }],
-        'noplaylist': True,
-        'quiet': True
+        'quiet': True,
+        'noplaylist': not playlist_mode,
+        'no_warnings': True,
     }
-else:
-    ydl_opts = {
-        'format': f'bestvideo[height<={resolution}]+bestaudio/best' if resolution != 'best' else 'bestvideo+bestaudio/best',
-        'outtmpl': os.path.join(output_folder, f"{judul}.%(ext)s"),
-        'progress_hooks': [progress_hook],
-        'merge_output_format': fmt,
-        'noplaylist': True,
-        'quiet': True
-    }
+    if jenis == "audio":
+        opts.update({
+            'format': 'bestaudio/best',
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': fmt,
+                'preferredquality': '192',
+            }],
+        })
+    else:
+        if resolution == "best":
+            opts.update({
+                'format': 'bestvideo+bestaudio/best',
+                'merge_output_format': fmt
+            })
+        else:
+            try:
+                h = int(resolution)
+                opts.update({
+                    'format': f'bestvideo[height<={h}]+bestaudio/best',
+                    'merge_output_format': fmt
+                })
+            except:
+                opts.update({
+                    'format': f'bestvideo+bestaudio/best',
+                    'merge_output_format': fmt
+                })
+    return opts
+
+def mulai_download_thread():
+    url = url_var.get().strip()
+    if not url:
+        messagebox.showwarning("Missing URL", "Masukkan URL terlebih dahulu.")
+        return
+    jenis = jenis_var.get()
+    fmt = format_var.get()
+    output_folder = output_folder_var.get()
+    playlist_mode = playlist_var.get()
+    resolution = res_var.get()
+    log(f"Start: jenis={jenis} format={fmt} playlist={playlist_mode} res={resolution}")
+
+    def run():
+        try:
+            opts = build_ydl_opts(jenis, fmt, output_folder, playlist_mode, resolution)
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                ydl.download([url])
+            log(f"Saved to: {output_folder}")
+            try:
+                info = ambil_resolusi_preview_sync(url)
+                title = sanitize_filename(info.get("title", "video"))
+                log_download(title, output_folder)
+            except Exception:
+                pass
+        except Exception as e:
+            log(f"Download error: {e}")
+            app.after(0, lambda: messagebox.showerror("Download Error", str(e)))
+
+    threading.Thread(target=run, daemon=True).start()
 
 
-try:
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
-    print(Fore.GREEN + f"\n🎉 Selesai! File tersimpan di: {output_folder}")
-except Exception as e:
-    print(Fore.RED + f"\n❌ Terjadi kesalahan: {e}")
+def on_close():
+    matrix.running = False
+    app.destroy()
 
-print(Style.RESET_ALL + "\n💎 Terima kasih telah menggunakan YouTube Downloader Sneijderlino 💎")
+app.protocol("WM_DELETE_WINDOW", on_close)
+
+log("Soft Hacker UI ready.")
+app.mainloop()

@@ -11,8 +11,6 @@
 
 ---
 
-
-
 # 🎬 YouTube Downloader Pro Ultimate Edition
 
 By [Sneijderlino](https://github.com/Sneijderlino)
@@ -58,6 +56,7 @@ cd youtube-downloader-pro
 pip install -r requirements.txt
 python src/main.py
 ```
+
 ---
 
 ### 🐧 Instalasi Di Kali Linux
@@ -253,4 +252,3 @@ File akan tersimpan di folder downloads/
   Dibuat dengan ❤ oleh <a href="https://github.com/Sneijderlino">Sneijderlino</a><br>
   <em>“Code. Create. Conquer.”</em>
 </p>
-# youtube-downloader-pro
