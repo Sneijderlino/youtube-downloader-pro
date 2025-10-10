@@ -8,7 +8,7 @@
 ---
 
 <p align="center">
-  <img src="assets/Banner.png" alt="YouTube Downloader Pro Banner" width="900"/>
+  <img src="/img/banner.jpg" alt="YouTube Downloader Pro Banner" width="900"/>
 </p>
 
 # 🎬 YouTube Downloader Pro Ultimate Edition
@@ -55,8 +55,8 @@ git clone https://github.com/Sneijderlino/youtube-downloader-pro.git
 cd youtube-downloader-pro
 pip install -r requirements.txt
 python src/main.py
----
 ```
+---
 
 ### 🐧 Instalasi Di Kali Linux
 
@@ -99,7 +99,7 @@ python src/main.py
 ```bash
 CTRL + '
 #Lalu Jalankan:
-python src/main.py
+py youtube-downloader-pro.py
 
 ```
 
