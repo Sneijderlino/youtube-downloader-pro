@@ -217,11 +217,18 @@ File akan tersimpan di folder downloads/
 </p>
 
 ---
+
+<p align="center">
+  <img src="/img/demo6.png" alt="Contoh output web_scanner_ghost" width="800"/><br>
+  <em>Program Berjalan:
+</p>
+
+---
+
 <p align="center">
   <img src="/img/finish.png" alt="Contoh output web_scanner_ghost" width="800"/><br>
   <em>Berhasil Mendownlaod Dan mengkonversi ke Format yang Diinginkan:
 </p>
-
 
 ---
 
@@ -234,7 +241,6 @@ File akan tersimpan di folder downloads/
 
 ---
 
-
 <h3 align="center">📜 Lisensi</h3>
 
 <p align="center">
@@ -242,11 +248,7 @@ File akan tersimpan di folder downloads/
   Bebas digunakan, dimodifikasi, dan dibagikan selama mencantumkan kredit.
 </p>
 
-
 ---
-
-
-
 
 <h3 align="center">💬 Dukungan & Kontribusi</h3>
 
@@ -255,7 +257,6 @@ File akan tersimpan di folder downloads/
   Silakan buka <a href="https://github.com/Sneijderlino/youtube-downloader-pro/issues">Issues</a> atau buat <a href="https://github.com/Sneijderlino/youtube-downloader-pro/pulls">Pull Request</a>.<br><br>
   ⭐ Jangan lupa beri bintang jika proyek ini bermanfaat!
 </p>
-
 
 ---
 
