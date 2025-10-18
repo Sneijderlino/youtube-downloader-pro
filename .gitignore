@@ -25,3 +25,5 @@ downloads/
 .DS_Store
 .idea/
 .vscode/
+
+*.exe
