@@ -23,13 +23,13 @@ def log_download(title, path):
     with open("riwayat_download.txt", "a", encoding="utf-8") as f:
         f.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {title} -> {path}\n")
 
-# -------------------- Colors (soft palette) --------------------
-BG_MAIN = "#061018"         # very dark blue/teal
-PANEL = "#0b1820"           # panel background
-ACCENT = "#fdfdfd"          # soft cyan (accent)
-ACCENT2 = "#000000"         # soft amber
-TEXT_SOFT = "#c9f0ef"       # soft off-white for text
-MUTED = "#97b3b7"           # muted text
+# -------------------- Colors  --------------------
+BG_MAIN = "#061018"        
+PANEL = "#0b1820"          
+ACCENT = "#fdfdfd"          
+ACCENT2 = "#000000"         
+TEXT_SOFT = "#c9f0ef"      
+MUTED = "#97b3b7"       
 
 # -------------------- App Config --------------------
 ctk.set_appearance_mode("dark")
@@ -61,7 +61,7 @@ left_frame.place(relx=0.02, rely=0.02, relwidth=0.56, relheight=0.96)
 
 # Title area
 title_label = ctk.CTkLabel(left_frame, text="SNEIJDERLINO • YOU TUBE DOWNLOADER", 
-                          font=("Consolas", 20, "bold"), text_color=ACCENT)
+                        font=("Consolas", 20, "bold"), text_color=ACCENT)
 title_label.pack(pady=(12,4))
 
 subtitle = ctk.CTkLabel(left_frame, text="Sneijderlino Ghost • GUI terminal", 
@@ -72,13 +72,13 @@ subtitle.pack(pady=(0,12))
 ctk.CTkLabel(left_frame, text="▶ URL YouTube:", anchor="w", font=("Consolas", 11), text_color=TEXT_SOFT).pack(padx=16, pady=(6,2), fill="x")
 url_var = ctk.StringVar()
 url_entry = ctk.CTkEntry(left_frame, textvariable=url_var, width=480, placeholder_text="https://youtube.com/...", 
-                         fg_color="#061821", text_color=TEXT_SOFT, corner_radius=6)
+                        fg_color="#061821", text_color=TEXT_SOFT, corner_radius=6)
 url_entry.pack(padx=16, pady=(0,10), fill="x")
 
 # Playlist checkbox
 playlist_var = ctk.BooleanVar(value=False)
 playlist_chk = ctk.CTkCheckBox(left_frame, text="Playlist (multi)", variable=playlist_var, 
-                               fg_color="#103235", text_color=MUTED)
+                            fg_color="#103235", text_color=MUTED)
 playlist_chk.pack(padx=16, pady=(0,8), anchor="w")
 
 # Type radio (audio / video)
