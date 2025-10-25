@@ -264,3 +264,24 @@ File akan tersimpan di folder downloads/
   Dibuat dengan ❤ oleh <a href="https://github.com/Sneijderlino">Sneijderlino</a><br>
   <em>“Code. Create. Conquer.”</em>
 </p>
+
+## 📚 Dokumentasi & Kontribusi
+
+Silakan lihat berkas pendukung untuk informasi lebih lanjut:
+
+- [CONTRIBUTING.md](CONTRIBUTING.md) — Panduan kontribusi dan alur kerja.
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — Aturan perilaku komunitas.
+- [SECURITY.md](SECURITY.md) — Prosedur pelaporan isu keamanan.
+- [AUTHORS.md](AUTHORS.md) — Daftar penulis dan maintainer.
+- [CHANGELOG.md](CHANGELOG.md) — Catatan rilis.
+
+Jika kamu menemukan bug atau ingin request fitur, buka Issues atau buat Pull Request.
+
+---
+
+## 📜 Lisensi & Hak Cipta
+
+Proyek ini dilisensikan di bawah [MIT License](LICENSE). Semua hak milik dan pengembangan oleh Sneijderlino.
+
+--
+_Diperbarui oleh_ Sneijderlino — _siap untuk kontribusi dan kolaborasi_.

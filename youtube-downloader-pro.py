@@ -107,7 +107,7 @@ res_menu.pack(padx=16, pady=(0,8), fill="x")
 
 # Folder chooser
 # Lokasi Hasil download default
-output_folder_var = ctk.StringVar(value=r"D:\SNEIJDERLINO\DATABASE APLIKASI SNEIJDERLINO\DATABASE_YOUTUBE_DOWNLOAD")
+output_folder_var = ctk.StringVar(value=r"C:\Users\LENOVO\Documents\YOUTUBE DOWNLOADER")
 
 def pilih_folder():
     f = filedialog.askdirectory()
